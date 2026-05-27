@@ -1,0 +1,154 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Article, ArticleState } from "@/lib/types";
+
+const PRIORITY_BAR = {
+  high: "bg-red-500",
+  medium: "bg-amber-400",
+  low: "bg-gray-300",
+};
+
+const PRIORITY_BADGE = {
+  high: "bg-red-50 text-red-600",
+  medium: "bg-amber-50 text-amber-600",
+  low: "bg-gray-100 text-gray-500",
+};
+
+const STATUS_LABELS = {
+  unread: "未読",
+  read: "読んだ",
+  understood: "理解した",
+};
+
+const STATUS_CYCLE: ArticleState["status"][] = [
+  "unread",
+  "read",
+  "understood",
+];
+
+function getStorageKey(id: string) {
+  return `catchup-ai-article-${id}`;
+}
+
+export default function ArticleCard({ article }: { article: Article }) {
+  const [state, setState] = useState<ArticleState>({
+    comment: "",
+    status: "unread",
+  });
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(getStorageKey(article.id));
+    if (saved) setState(JSON.parse(saved));
+  }, [article.id]);
+
+  function updateState(patch: Partial<ArticleState>) {
+    const next = { ...state, ...patch };
+    setState(next);
+    localStorage.setItem(getStorageKey(article.id), JSON.stringify(next));
+  }
+
+  function cycleStatus() {
+    const idx = STATUS_CYCLE.indexOf(state.status);
+    updateState({ status: STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length] });
+  }
+
+  const date = new Date(article.publishedAt);
+  const timeStr = date.toLocaleDateString("ja-JP", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return (
+    <article
+      className={`group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-all ${state.status === "understood" ? "opacity-50" : ""}`}
+    >
+      <div className={`h-1 ${PRIORITY_BAR[article.priority]}`} />
+
+      <div className="p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <span
+            className={`text-[10px] font-bold tracking-wider px-2 py-0.5 rounded ${PRIORITY_BADGE[article.priority]}`}
+          >
+            {article.priority === "high"
+              ? "HIGH"
+              : article.priority === "medium"
+                ? "MID"
+                : "LOW"}
+          </span>
+          <span className="text-xs font-medium text-gray-900">
+            {article.source}
+          </span>
+          <span className="text-xs text-gray-400">{timeStr}</span>
+        </div>
+
+        <a
+          href={article.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block group/link"
+        >
+          <h3 className="text-base font-bold text-gray-900 leading-snug mb-1 group-hover/link:text-red-600 transition-colors line-clamp-2">
+            {article.titleJa}
+          </h3>
+          <p className="text-[11px] text-gray-400 mb-2">{article.title}</p>
+        </a>
+
+        {article.summaryJa && (
+          <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-3">
+            {article.summaryJa}
+          </p>
+        )}
+
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-1.5">
+            {article.tags.slice(0, 3).map((tag) => (
+              <span
+                key={tag}
+                className="text-[10px] font-medium text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {isExpanded ? "閉じる" : "メモ"}
+            </button>
+            <button
+              onClick={cycleStatus}
+              className={`text-[11px] px-2.5 py-1 rounded-full font-medium transition-all ${
+                state.status === "understood"
+                  ? "bg-emerald-50 text-emerald-600"
+                  : state.status === "read"
+                    ? "bg-blue-50 text-blue-600"
+                    : "bg-gray-100 text-gray-400"
+              }`}
+            >
+              {STATUS_LABELS[state.status]}
+            </button>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <textarea
+              value={state.comment}
+              onChange={(e) => updateState({ comment: e.target.value })}
+              placeholder="自分の言葉でメモを残す（思考放棄しない！）"
+              className="w-full text-sm p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300"
+              rows={2}
+            />
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}
