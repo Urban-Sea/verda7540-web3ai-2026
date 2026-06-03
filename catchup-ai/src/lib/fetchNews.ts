@@ -1,6 +1,6 @@
 import RSSParser from "rss-parser";
 import translate from "google-translate-api-x";
-import { Article } from "./types";
+import { Article, Domain } from "./types";
 
 const RSS_FEEDS = [
   {
@@ -43,6 +43,138 @@ const MEDIUM_PRIORITY_KEYWORDS = [
   "reasoning",
 ];
 
+const DOMAIN_KEYWORDS: Record<Domain, string[]> = {
+  safety: [
+    "safety",
+    "alignment",
+    "jailbreak",
+    "red team",
+    "red-team",
+    "vulnerability",
+    "exploit",
+    "security",
+    "prompt injection",
+    "deepfake",
+    "misuse",
+    "abuse",
+    "harm",
+    "hallucination",
+    "csam",
+    "biosecurity",
+    "weaponiz",
+  ],
+  policy: [
+    "regulation",
+    "regulator",
+    "policy",
+    "law",
+    "lawsuit",
+    "sue",
+    "court",
+    "judge",
+    "ruling",
+    "eu ai act",
+    "executive order",
+    "white house",
+    "congress",
+    "senate",
+    "ban",
+    "copyright",
+    "antitrust",
+    "ftc",
+    "doj",
+    "treaty",
+    "government",
+  ],
+  infra: [
+    "gpu",
+    "chip",
+    "nvidia",
+    "tsmc",
+    "amd",
+    "intel",
+    "datacenter",
+    "data center",
+    "compute",
+    "cluster",
+    "supercomputer",
+    "training run",
+    "power",
+    "energy",
+    "semiconductor",
+    "nuclear",
+    "cooling",
+    "hbm",
+    "cuda",
+  ],
+  agents: [
+    "agent",
+    "agentic",
+    "copilot",
+    "tool use",
+    "tool-use",
+    "mcp",
+    "autonomous",
+    "assistant",
+    "devin",
+    "workflow",
+    "browser use",
+    "computer use",
+    "operator",
+  ],
+  models: [
+    "gpt",
+    "claude",
+    "gemini",
+    "llama",
+    "mistral",
+    "deepseek",
+    "qwen",
+    "grok",
+    "llm",
+    "foundation model",
+    "multimodal",
+    "transformer",
+    "reasoning model",
+    "open source model",
+    "open-source model",
+    "open weight",
+    "release",
+    "launch",
+  ],
+  industry: [
+    "funding",
+    "raise",
+    "raised",
+    "investment",
+    "ipo",
+    "acquisition",
+    "acquires",
+    "acquired",
+    "valuation",
+    "ceo",
+    "cfo",
+    "cto",
+    "layoff",
+    "layoffs",
+    "hire",
+    "deal",
+    "partnership",
+    "startup",
+    "billion",
+    "merger",
+  ],
+};
+
+const DOMAIN_PRIORITY: Domain[] = [
+  "safety",
+  "policy",
+  "infra",
+  "agents",
+  "models",
+  "industry",
+];
+
 function stripHtml(html: string): string {
   return html
     .replace(/<[^>]*>/g, "")
@@ -73,6 +205,25 @@ function extractTags(title: string, summary: string): string[] {
     0,
     4
   );
+}
+
+function determineDomain(title: string, summary: string): Domain {
+  const text = `${title} ${summary}`.toLowerCase();
+  let bestDomain: Domain = "industry";
+  let bestScore = 0;
+
+  for (const domain of DOMAIN_PRIORITY) {
+    const score = DOMAIN_KEYWORDS[domain].reduce(
+      (sum, kw) => (text.includes(kw) ? sum + 1 : sum),
+      0
+    );
+    if (score > bestScore) {
+      bestScore = score;
+      bestDomain = domain;
+    }
+  }
+
+  return bestDomain;
 }
 
 function hashString(str: string): string {
@@ -115,6 +266,7 @@ export async function fetchAllNews(): Promise<Article[]> {
           source: feed.source,
           publishedAt: item.isoDate || item.pubDate || new Date().toISOString(),
           priority: determinePriority(title, summary),
+          domain: determineDomain(title, summary),
           tags: extractTags(title, summary),
         };
       });

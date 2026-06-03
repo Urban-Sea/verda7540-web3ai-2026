@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Article, ArticleState } from "@/lib/types";
+import { Article, ArticleState, DOMAIN_META } from "@/lib/types";
+import { DOMAIN_STYLE } from "@/lib/domainStyle";
 
 const STATUS_LABELS = { unread: "未読", read: "読んだ", understood: "理解した" };
 const STATUS_CYCLE: ArticleState["status"][] = ["unread", "read", "understood"];
@@ -43,9 +44,18 @@ export default function HeroCard({ article }: { article: Article }) {
 
   return (
     <article className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-      <div className="bg-red-600 px-6 py-2 flex items-center gap-2">
+      <div className="bg-red-600 px-6 py-2 flex items-center gap-3">
         <span className="text-[11px] font-black tracking-widest uppercase text-white">
           Top Story
+        </span>
+        <span className="text-white/40">·</span>
+        <span
+          className={`inline-flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full bg-white/15 text-white`}
+        >
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${DOMAIN_STYLE[article.domain].dot}`}
+          />
+          {DOMAIN_META[article.domain].label}
         </span>
       </div>
       <div className="p-6 md:p-8">

@@ -1,18 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Article, ArticleState } from "@/lib/types";
+import { Article, ArticleState, DOMAIN_META } from "@/lib/types";
+import { DOMAIN_STYLE } from "@/lib/domainStyle";
 
 const PRIORITY_BAR = {
   high: "bg-red-500",
   medium: "bg-amber-400",
   low: "bg-gray-300",
-};
-
-const PRIORITY_BADGE = {
-  high: "bg-red-50 text-red-600",
-  medium: "bg-amber-50 text-amber-600",
-  low: "bg-gray-100 text-gray-500",
 };
 
 const STATUS_LABELS = {
@@ -69,15 +64,14 @@ export default function ArticleCard({ article }: { article: Article }) {
       <div className={`h-1 ${PRIORITY_BAR[article.priority]}`} />
 
       <div className="p-5">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span
-            className={`text-[10px] font-bold tracking-wider px-2 py-0.5 rounded ${PRIORITY_BADGE[article.priority]}`}
+            className={`inline-flex items-center gap-1 text-[10px] font-bold tracking-wider px-2 py-0.5 rounded ${DOMAIN_STYLE[article.domain].badge}`}
           >
-            {article.priority === "high"
-              ? "HIGH"
-              : article.priority === "medium"
-                ? "MID"
-                : "LOW"}
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${DOMAIN_STYLE[article.domain].dot}`}
+            />
+            {DOMAIN_META[article.domain].label.toUpperCase()}
           </span>
           <span className="text-xs font-medium text-gray-900">
             {article.source}
