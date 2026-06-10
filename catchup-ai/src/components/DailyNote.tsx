@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Article, Domain, DOMAIN_META } from "@/lib/types";
 import { DOMAIN_STYLE } from "@/lib/domainStyle";
+import {
+  ArticleStatesProvider,
+  useArticleStates,
+} from "@/lib/articleState";
 import ArticleCard from "./ArticleCard";
 import HeroCard from "./HeroCard";
 
@@ -19,15 +23,16 @@ type DomainFilter = "all" | Domain;
 
 export default function DailyNote() {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [fetchedAt, setFetchedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<DomainFilter>("all");
 
   useEffect(() => {
     fetch("/api/news")
       .then((res) => res.json())
       .then((data) => {
         setArticles(data.articles || []);
+        setFetchedAt(data.fetchedAt || null);
         setLoading(false);
       })
       .catch(() => {
@@ -35,24 +40,6 @@ export default function DailyNote() {
         setLoading(false);
       });
   }, []);
-
-  const today = new Date().toLocaleDateString("ja-JP", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "long",
-  });
-
-  const counts: Record<DomainFilter, number> = {
-    all: articles.length,
-    models: 0,
-    agents: 0,
-    safety: 0,
-    policy: 0,
-    infra: 0,
-    industry: 0,
-  };
-  for (const a of articles) counts[a.domain] += 1;
 
   if (loading) {
     return (
@@ -77,8 +64,59 @@ export default function DailyNote() {
     );
   }
 
-  const filtered =
+  return (
+    <ArticleStatesProvider>
+      <DailyNoteBody articles={articles} fetchedAt={fetchedAt} />
+    </ArticleStatesProvider>
+  );
+}
+
+function DailyNoteBody({
+  articles,
+  fetchedAt,
+}: {
+  articles: Article[];
+  fetchedAt: string | null;
+}) {
+  const { states } = useArticleStates();
+  const [filter, setFilter] = useState<DomainFilter>("all");
+  const [unreadOnly, setUnreadOnly] = useState(false);
+
+  const today = new Date().toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
+
+  const updatedStr = fetchedAt
+    ? new Date(fetchedAt).toLocaleTimeString("ja-JP", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+
+  const isUnread = (a: Article) =>
+    (states[a.id]?.status ?? "unread") === "unread";
+
+  const readCount = articles.filter((a) => !isUnread(a)).length;
+  const total = articles.length;
+  const percent = total > 0 ? Math.round((readCount / total) * 100) : 0;
+
+  const counts: Record<DomainFilter, number> = {
+    all: articles.length,
+    models: 0,
+    agents: 0,
+    safety: 0,
+    policy: 0,
+    infra: 0,
+    industry: 0,
+  };
+  for (const a of articles) counts[a.domain] += 1;
+
+  const byDomainAll =
     filter === "all" ? articles : articles.filter((a) => a.domain === filter);
+  const filtered = unreadOnly ? byDomainAll.filter(isUnread) : byDomainAll;
 
   const hero = filter === "all" ? filtered[0] : null;
   const restAll = hero ? filtered.slice(1) : filtered;
@@ -109,6 +147,7 @@ export default function DailyNote() {
             {articles.length} 件のAIニュースを 6 領域に分類しました
           </p>
           <p className="text-xs text-gray-400 font-mono">
+            {updatedStr ? `最終更新 ${updatedStr} · ` : ""}
             Sources: TechCrunch / The Verge / Ars Technica
           </p>
         </div>
@@ -116,7 +155,26 @@ export default function DailyNote() {
         <div className="h-px bg-gray-300 mt-1" />
       </div>
 
-      <div className="flex gap-2 mb-8 flex-wrap">
+      <div className="mb-8 rounded-xl border border-gray-200 bg-white px-5 py-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-bold tracking-widest uppercase text-gray-500">
+            今日の消化率
+          </span>
+          <span className="text-sm font-mono text-gray-900">
+            {readCount}
+            <span className="text-gray-400"> / {total}</span>
+            <span className="ml-2 text-emerald-600 font-bold">{percent}%</span>
+          </span>
+        </div>
+        <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2 mb-8 flex-wrap items-center">
         <button
           onClick={() => setFilter("all")}
           className={`text-xs px-4 py-2 rounded-full font-medium transition-all ${
@@ -148,6 +206,25 @@ export default function DailyNote() {
             </button>
           );
         })}
+
+        <div className="flex-1" />
+
+        <button
+          onClick={() => setUnreadOnly((v) => !v)}
+          aria-pressed={unreadOnly}
+          className={`inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full font-medium transition-all ${
+            unreadOnly
+              ? "bg-red-600 text-white shadow-sm"
+              : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300 hover:text-gray-700"
+          }`}
+        >
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              unreadOnly ? "bg-white" : "bg-red-500"
+            }`}
+          />
+          未読のみ
+        </button>
       </div>
 
       {hero && (
@@ -156,9 +233,13 @@ export default function DailyNote() {
         </div>
       )}
 
-      {visibleDomains.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-gray-400">該当する記事がありません</p>
+          <p className="text-gray-400">
+            {unreadOnly
+              ? "未読の記事はありません 🎉"
+              : "該当する記事がありません"}
+          </p>
         </div>
       ) : (
         <div className="space-y-12">

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Article, ArticleState, DOMAIN_META } from "@/lib/types";
+import { useState } from "react";
+import { Article, DOMAIN_META } from "@/lib/types";
 import { DOMAIN_STYLE } from "@/lib/domainStyle";
+import { useArticleState } from "@/lib/articleState";
+import { timeAgo, fullTimestamp } from "@/lib/timeAgo";
 
 const PRIORITY_BAR = {
   high: "bg-red-500",
@@ -16,46 +18,11 @@ const STATUS_LABELS = {
   understood: "理解した",
 };
 
-const STATUS_CYCLE: ArticleState["status"][] = [
-  "unread",
-  "read",
-  "understood",
-];
-
-function getStorageKey(id: string) {
-  return `catchup-ai-article-${id}`;
-}
-
 export default function ArticleCard({ article }: { article: Article }) {
-  const [state, setState] = useState<ArticleState>({
-    comment: "",
-    status: "unread",
-  });
+  const { state, setComment, cycleStatus } = useArticleState(article.id);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem(getStorageKey(article.id));
-    if (saved) setState(JSON.parse(saved));
-  }, [article.id]);
-
-  function updateState(patch: Partial<ArticleState>) {
-    const next = { ...state, ...patch };
-    setState(next);
-    localStorage.setItem(getStorageKey(article.id), JSON.stringify(next));
-  }
-
-  function cycleStatus() {
-    const idx = STATUS_CYCLE.indexOf(state.status);
-    updateState({ status: STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length] });
-  }
-
-  const date = new Date(article.publishedAt);
-  const timeStr = date.toLocaleDateString("ja-JP", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const timeStr = timeAgo(article.publishedAt);
 
   return (
     <article
@@ -76,7 +43,12 @@ export default function ArticleCard({ article }: { article: Article }) {
           <span className="text-xs font-medium text-gray-900">
             {article.source}
           </span>
-          <span className="text-xs text-gray-400">{timeStr}</span>
+          <span
+            className="text-xs text-gray-400"
+            title={fullTimestamp(article.publishedAt)}
+          >
+            {timeStr}
+          </span>
         </div>
 
         <a
@@ -135,7 +107,7 @@ export default function ArticleCard({ article }: { article: Article }) {
           <div className="mt-3 pt-3 border-t border-gray-100">
             <textarea
               value={state.comment}
-              onChange={(e) => updateState({ comment: e.target.value })}
+              onChange={(e) => setComment(e.target.value)}
               placeholder="自分の言葉でメモを残す（思考放棄しない！）"
               className="w-full text-sm p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300"
               rows={2}
