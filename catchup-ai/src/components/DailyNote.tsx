@@ -9,6 +9,7 @@ import {
 } from "@/lib/articleState";
 import ArticleCard from "./ArticleCard";
 import HeroCard from "./HeroCard";
+import ReviewView from "./ReviewView";
 
 const DOMAIN_ORDER: Domain[] = [
   "models",
@@ -79,8 +80,14 @@ function DailyNoteBody({
   fetchedAt: string | null;
 }) {
   const { states } = useArticleStates();
+  const [mode, setMode] = useState<"daily" | "review">("daily");
   const [filter, setFilter] = useState<DomainFilter>("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
+
+  // 振り返りタブに「未完了の試す」件数バッジを出す
+  const pendingTodos = Object.values(states).filter(
+    (s) => s.action === "todo"
+  ).length;
 
   const today = new Date().toLocaleDateString("ja-JP", {
     year: "numeric",
@@ -155,6 +162,38 @@ function DailyNoteBody({
         <div className="h-px bg-gray-300 mt-1" />
       </div>
 
+      <div className="flex gap-2 mb-8">
+        <button
+          onClick={() => setMode("daily")}
+          className={`text-sm px-4 py-2 rounded-lg font-bold transition-all ${
+            mode === "daily"
+              ? "bg-gray-900 text-white shadow-sm"
+              : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300 hover:text-gray-700"
+          }`}
+        >
+          今日のブリーフ
+        </button>
+        <button
+          onClick={() => setMode("review")}
+          className={`inline-flex items-center gap-2 text-sm px-4 py-2 rounded-lg font-bold transition-all ${
+            mode === "review"
+              ? "bg-gray-900 text-white shadow-sm"
+              : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300 hover:text-gray-700"
+          }`}
+        >
+          振り返り
+          {pendingTodos > 0 && (
+            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-amber-500 text-white text-[10px] font-black">
+              {pendingTodos}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {mode === "review" && <ReviewView articles={articles} />}
+
+      {mode === "daily" && (
+      <>
       <div className="mb-8 rounded-xl border border-gray-200 bg-white px-5 py-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-bold tracking-widest uppercase text-gray-500">
@@ -286,6 +325,8 @@ function DailyNoteBody({
             );
           })}
         </div>
+      )}
+      </>
       )}
     </div>
   );

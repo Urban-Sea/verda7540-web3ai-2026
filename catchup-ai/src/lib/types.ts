@@ -56,7 +56,21 @@ export const DOMAIN_META: Record<
   },
 };
 
+// 記事がフィードから流れて消えても振り返れるよう、操作時にメタを焼き付けておく
+export interface ArticleSnapshot {
+  title: string;
+  titleJa: string;
+  url: string;
+  source: string;
+  domain: Domain;
+  publishedAt: string;
+}
+
 export interface ArticleState {
   comment: string;
   status: "unread" | "read" | "understood";
+  // VPC #9「行動に変換する導線」: なし → 試す → やった
+  action: "none" | "todo" | "done";
+  snapshot?: ArticleSnapshot;
+  updatedAt?: string;
 }

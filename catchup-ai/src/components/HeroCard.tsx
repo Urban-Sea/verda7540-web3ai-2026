@@ -8,8 +8,15 @@ import { timeAgo, fullTimestamp } from "@/lib/timeAgo";
 
 const STATUS_LABELS = { unread: "未読", read: "読んだ", understood: "理解した" };
 
+const ACTION_BUTTON = {
+  none: { label: "＋ 試す", className: "bg-gray-100 text-gray-500 ring-1 ring-gray-200" },
+  todo: { label: "🎯 試す予定", className: "bg-amber-50 text-amber-600 ring-1 ring-amber-200" },
+  done: { label: "✓ 実践した", className: "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200" },
+};
+
 export default function HeroCard({ article }: { article: Article }) {
-  const { state, setComment, cycleStatus } = useArticleState(article.id);
+  const { state, setComment, cycleStatus, cycleAction } =
+    useArticleState(article);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const timeStr = timeAgo(article.publishedAt);
@@ -41,6 +48,13 @@ export default function HeroCard({ article }: { article: Article }) {
             {timeStr}
           </span>
           <div className="flex-1" />
+          <button
+            onClick={cycleAction}
+            title="この記事をアクション化（試す → 実践した）"
+            className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${ACTION_BUTTON[state.action].className}`}
+          >
+            {ACTION_BUTTON[state.action].label}
+          </button>
           <button
             onClick={cycleStatus}
             className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${
