@@ -14,6 +14,8 @@ import { Article, ArticleSnapshot, ArticleState } from "./types";
 const KEY_PREFIX = "catchup-ai-article-";
 const DEFAULT_STATE: ArticleState = {
   comment: "",
+  stance: "",
+  stanceResult: "none",
   status: "unread",
   action: "none",
 };
@@ -140,6 +142,17 @@ export function useArticleState(article: Article) {
     [id, update, snapshot]
   );
 
+  const setStance = useCallback(
+    (stance: string) => update(id, { stance }, snapshot),
+    [id, update, snapshot]
+  );
+
+  const setStanceResult = useCallback(
+    (stanceResult: ArticleState["stanceResult"]) =>
+      update(id, { stanceResult }, snapshot),
+    [id, update, snapshot]
+  );
+
   const cycleStatus = useCallback(() => {
     const idx = STATUS_CYCLE.indexOf(state.status);
     update(
@@ -158,5 +171,12 @@ export function useArticleState(article: Article) {
     );
   }, [id, state.action, update, snapshot]);
 
-  return { state, setComment, cycleStatus, cycleAction };
+  return {
+    state,
+    setComment,
+    setStance,
+    setStanceResult,
+    cycleStatus,
+    cycleAction,
+  };
 }

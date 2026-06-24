@@ -30,6 +30,19 @@ const STATUS_LABELS: Record<ArticleState["status"], string> = {
   understood: "理解した",
 };
 
+const STANCE_PILL: Record<ArticleState["stanceResult"], string> = {
+  none: "bg-gray-100 text-gray-400",
+  hit: "bg-emerald-50 text-emerald-600",
+  partial: "bg-amber-50 text-amber-600",
+  miss: "bg-rose-50 text-rose-600",
+};
+const STANCE_LABELS: Record<ArticleState["stanceResult"], string> = {
+  none: "未答え合わせ",
+  hit: "✅ 当たり",
+  partial: "〰️ 部分的",
+  miss: "❌ 外れ",
+};
+
 interface ReviewEntry {
   id: string;
   state: ArticleState;
@@ -86,6 +99,16 @@ function ArticleLink({ info }: { info: ArticleSnapshot | null }) {
     >
       {info.titleJa || info.title}
     </a>
+  );
+}
+
+function ResultBadge({ result }: { result: ArticleState["stanceResult"] }) {
+  return (
+    <span
+      className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STANCE_PILL[result]}`}
+    >
+      {STANCE_LABELS[result]}
+    </span>
   );
 }
 
@@ -174,6 +197,25 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
     [inPeriod]
   );
 
+  // v5: 予想（読む前のスタンス）を書いた記事だけを集める
+  const stanceEntries = useMemo(
+    () =>
+      inPeriod
+        .filter((e) => (e.state.stance ?? "").trim() !== "")
+        .sort(byUpdatedDesc),
+    [inPeriod]
+  );
+  const stanceCheckedCount = stanceEntries.filter(
+    (e) => e.state.stanceResult !== "none"
+  ).length;
+  const stanceHitCount = stanceEntries.filter(
+    (e) => e.state.stanceResult === "hit"
+  ).length;
+  const hitRate =
+    stanceCheckedCount > 0
+      ? Math.round((stanceHitCount / stanceCheckedCount) * 100)
+      : null;
+
   const toggleDone = (e: ReviewEntry) =>
     update(e.id, { action: e.state.action === "done" ? "todo" : "done" });
 
@@ -185,7 +227,7 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
           まだ振り返るノートがありません
         </p>
         <p className="text-sm text-gray-400">
-          「今日のブリーフ」で気になった記事にメモを書いたり、
+          「今日のブリーフ」で読む前に予想を書いたり、メモを残したり、
           <br />
           「＋試す」でアクション化すると、ここに積み上がっていきます。
         </p>
@@ -292,6 +334,69 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
                   )}
                 </div>
               </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 予想の答え合わせ（v5: Think for yourself） */}
+      <section>
+        <div className="mb-4 flex items-baseline gap-3 flex-wrap">
+          <h3 className="text-xs font-black tracking-[0.2em] uppercase text-indigo-600">
+            🤔 予想の答え合わせ
+          </h3>
+          <span className="text-xs text-gray-400">
+            {stanceEntries.length} 件
+          </span>
+          {hitRate !== null && (
+            <span className="text-xs text-gray-400">
+              的中率{" "}
+              <span className="font-bold text-indigo-600">{hitRate}%</span>
+              <span className="text-gray-300">
+                {" "}
+                （{stanceHitCount}/{stanceCheckedCount}）
+              </span>
+            </span>
+          )}
+        </div>
+        {stanceEntries.length === 0 ? (
+          <p className="text-sm text-gray-400 rounded-xl border border-dashed border-gray-200 px-5 py-6 text-center">
+            まだ予想がありません。「今日のブリーフ」で記事を
+            <span className="font-bold text-gray-500">読む前に</span>
+            、タイトルから結論を予想して書いてみよう。読んだあとに答え合わせできます。
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {stanceEntries.map((e) => (
+              <article
+                key={e.id}
+                className="rounded-xl border border-gray-200 bg-white px-4 py-3"
+              >
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  {e.info && <DomainBadge info={e.info} />}
+                  {e.info && (
+                    <span className="text-xs text-gray-500">
+                      {e.info.source}
+                    </span>
+                  )}
+                  <ResultBadge result={e.state.stanceResult} />
+                  {e.state.updatedAt && (
+                    <span
+                      className="text-[11px] text-gray-400 ml-auto"
+                      title={fullTimestamp(e.state.updatedAt)}
+                    >
+                      {timeAgo(e.state.updatedAt)}
+                    </span>
+                  )}
+                </div>
+                <ArticleLink info={e.info} />
+                <p className="mt-1.5 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap border-l-2 border-indigo-200 pl-3">
+                  <span className="mr-1 text-[10px] font-bold text-indigo-400">
+                    予想
+                  </span>
+                  {e.state.stance}
+                </p>
+              </article>
             ))}
           </div>
         )}

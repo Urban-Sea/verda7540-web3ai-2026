@@ -5,12 +5,15 @@ import { Article, DOMAIN_META } from "@/lib/types";
 import { DOMAIN_STYLE } from "@/lib/domainStyle";
 import { useArticleState } from "@/lib/articleState";
 import { timeAgo, fullTimestamp } from "@/lib/timeAgo";
+import StanceBlock from "./StanceBlock";
 
 const PRIORITY_BAR = {
   high: "bg-red-500",
   medium: "bg-amber-400",
   low: "bg-gray-300",
 };
+
+const RESULT_EMOJI = { none: "", hit: "✅", partial: "〰️", miss: "❌" } as const;
 
 const STATUS_LABELS = {
   unread: "未読",
@@ -25,11 +28,21 @@ const ACTION_BUTTON = {
 };
 
 export default function ArticleCard({ article }: { article: Article }) {
-  const { state, setComment, cycleStatus, cycleAction } =
+  const { state, setComment, setStance, setStanceResult, cycleStatus, cycleAction } =
     useArticleState(article);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const timeStr = timeAgo(article.publishedAt);
+
+  // 未読×予想なしのときは「予想する」と促し、答え合わせ済みなら結果絵文字を出す
+  const noteLabel =
+    state.stanceResult !== "none"
+      ? `${RESULT_EMOJI[state.stanceResult]} ノート`
+      : state.stance.trim() !== "" || state.comment.trim() !== ""
+        ? "✍️ ノート"
+        : state.status === "unread"
+          ? "🤔 予想する"
+          : "✍️ ノート";
 
   return (
     <article
@@ -93,7 +106,7 @@ export default function ArticleCard({ article }: { article: Article }) {
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
             >
-              {isExpanded ? "閉じる" : "メモ"}
+              {isExpanded ? "閉じる" : noteLabel}
             </button>
             <button
               onClick={cycleAction}
@@ -118,14 +131,26 @@ export default function ArticleCard({ article }: { article: Article }) {
         </div>
 
         {isExpanded && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <textarea
-              value={state.comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="自分の言葉でメモを残す（思考放棄しない！）"
-              className="w-full text-sm p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300"
+          <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+            <StanceBlock
+              stance={state.stance}
+              result={state.stanceResult}
+              onStanceChange={setStance}
+              onResultChange={setStanceResult}
               rows={2}
             />
+            <div>
+              <label className="mb-1.5 block text-[11px] font-bold tracking-wider text-gray-500">
+                📝 読んだあとのメモ
+              </label>
+              <textarea
+                value={state.comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="自分の言葉でメモを残す（思考放棄しない！）"
+                className="w-full text-sm p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300"
+                rows={2}
+              />
+            </div>
           </div>
         )}
       </div>

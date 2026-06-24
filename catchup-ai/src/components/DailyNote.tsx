@@ -110,6 +110,11 @@ function DailyNoteBody({
   const total = articles.length;
   const percent = total > 0 ? Math.round((readCount / total) * 100) : 0;
 
+  // v5: 今日の記事のうち「読む前に予想を書いた」件数
+  const stanceCount = articles.filter(
+    (a) => (states[a.id]?.stance ?? "").trim() !== ""
+  ).length;
+
   const counts: Record<DomainFilter, number> = {
     all: articles.length,
     models: 0,
@@ -211,6 +216,11 @@ function DailyNoteBody({
             style={{ width: `${percent}%` }}
           />
         </div>
+        <p className="mt-2 text-[11px] text-gray-400">
+          🤔 読む前の予想{" "}
+          <span className="font-bold text-indigo-600">{stanceCount}</span> 件
+          <span className="text-gray-300"> · 思考放棄しない第一歩</span>
+        </p>
       </div>
 
       <div className="flex gap-2 mb-8 flex-wrap items-center">

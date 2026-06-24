@@ -68,6 +68,10 @@ export interface ArticleSnapshot {
 
 export interface ArticleState {
   comment: string;
+  // v5「自分の見解レイヤー」: 読む前に書く自分の予想・スタンス（思考放棄しない／active recall）
+  stance: string;
+  // 読んだあとの答え合わせ: なし → 当たり / 部分的 / 外れ
+  stanceResult: "none" | "hit" | "partial" | "miss";
   status: "unread" | "read" | "understood";
   // VPC #9「行動に変換する導線」: なし → 試す → やった
   action: "none" | "todo" | "done";
