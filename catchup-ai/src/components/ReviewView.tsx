@@ -20,9 +20,10 @@ const PERIODS: { key: Period; label: string }[] = [
 ];
 
 const STATUS_PILL: Record<ArticleState["status"], string> = {
-  unread: "bg-gray-100 text-gray-400",
-  read: "bg-blue-50 text-blue-600",
-  understood: "bg-emerald-50 text-emerald-600",
+  unread: "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500",
+  read: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
+  understood:
+    "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
 };
 const STATUS_LABELS: Record<ArticleState["status"], string> = {
   unread: "未読",
@@ -31,10 +32,10 @@ const STATUS_LABELS: Record<ArticleState["status"], string> = {
 };
 
 const STANCE_PILL: Record<ArticleState["stanceResult"], string> = {
-  none: "bg-gray-100 text-gray-400",
-  hit: "bg-emerald-50 text-emerald-600",
-  partial: "bg-amber-50 text-amber-600",
-  miss: "bg-rose-50 text-rose-600",
+  none: "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500",
+  hit: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
+  partial: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
+  miss: "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",
 };
 const STANCE_LABELS: Record<ArticleState["stanceResult"], string> = {
   none: "未答え合わせ",
@@ -88,14 +89,18 @@ function DomainBadge({ info }: { info: ArticleSnapshot }) {
 
 function ArticleLink({ info }: { info: ArticleSnapshot | null }) {
   if (!info) {
-    return <span className="text-sm text-gray-400">(記事情報なし)</span>;
+    return (
+      <span className="text-sm text-gray-400 dark:text-gray-500">
+        (記事情報なし)
+      </span>
+    );
   }
   return (
     <a
       href={info.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-sm font-bold text-gray-900 leading-snug hover:text-red-600 transition-colors line-clamp-2"
+      className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-snug hover:text-red-600 dark:hover:text-red-400 transition-colors line-clamp-2"
     >
       {info.titleJa || info.title}
     </a>
@@ -122,8 +127,8 @@ function StatTile({
   accent: string;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
-      <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400">
+    <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+      <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 dark:text-gray-500">
         {label}
       </p>
       <p className={`mt-1 text-2xl font-black tabular-nums ${accent}`}>
@@ -223,10 +228,10 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
     return (
       <div className="text-center py-24">
         <p className="text-4xl mb-4">📓</p>
-        <p className="text-gray-500 font-medium mb-1">
+        <p className="text-gray-500 dark:text-gray-400 font-medium mb-1">
           まだ振り返るノートがありません
         </p>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-400 dark:text-gray-500">
           「今日のブリーフ」で読む前に予想を書いたり、メモを残したり、
           <br />
           「＋試す」でアクション化すると、ここに積み上がっていきます。
@@ -239,15 +244,17 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
     <div className="space-y-10">
       {/* 期間切り替え */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-400 mr-1">期間</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500 mr-1">
+          期間
+        </span>
         {PERIODS.map((p) => (
           <button
             key={p.key}
             onClick={() => setPeriod(p.key)}
-            className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all ${
+            className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all active:scale-[0.98] ${
               period === p.key
-                ? "bg-gray-900 text-white shadow-sm"
-                : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300 hover:text-gray-700"
+                ? "bg-gray-900 text-white shadow-sm dark:bg-gray-100 dark:text-gray-900"
+                : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300 hover:text-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700 dark:hover:border-gray-600 dark:hover:text-gray-200"
             }`}
           >
             {p.label}
@@ -257,27 +264,45 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
 
       {/* 振り返り指標 */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <StatTile label="メモ" value={memoCount} accent="text-gray-900" />
-        <StatTile label="読んだ" value={readCount} accent="text-blue-600" />
+        <StatTile
+          label="メモ"
+          value={memoCount}
+          accent="text-gray-900 dark:text-gray-100"
+        />
+        <StatTile
+          label="読んだ"
+          value={readCount}
+          accent="text-blue-600 dark:text-blue-400"
+        />
         <StatTile
           label="理解した"
           value={understoodCount}
-          accent="text-emerald-600"
+          accent="text-emerald-600 dark:text-emerald-400"
         />
-        <StatTile label="試す予定" value={todoCount} accent="text-amber-600" />
-        <StatTile label="実践した" value={doneCount} accent="text-emerald-600" />
+        <StatTile
+          label="試す予定"
+          value={todoCount}
+          accent="text-amber-600 dark:text-amber-400"
+        />
+        <StatTile
+          label="実践した"
+          value={doneCount}
+          accent="text-emerald-600 dark:text-emerald-400"
+        />
       </div>
 
       {/* アクション（試すこと） */}
       <section>
         <div className="mb-4 flex items-baseline gap-3">
-          <h3 className="text-xs font-black tracking-[0.2em] uppercase text-amber-600">
+          <h3 className="text-xs font-black tracking-[0.2em] uppercase text-amber-600 dark:text-amber-400">
             🎯 試すこと（アクション）
           </h3>
-          <span className="text-xs text-gray-400">{actions.length} 件</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">
+            {actions.length} 件
+          </span>
         </div>
         {actions.length === 0 ? (
-          <p className="text-sm text-gray-400 rounded-xl border border-dashed border-gray-200 px-5 py-6 text-center">
+          <p className="text-sm text-gray-400 dark:text-gray-500 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 px-5 py-6 text-center">
             アクション化した記事はまだありません。気になった記事の「＋試す」を押そう。
           </p>
         ) : (
@@ -285,10 +310,10 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
             {actions.map((e) => (
               <div
                 key={e.id}
-                className={`flex items-start gap-3 rounded-xl border bg-white px-4 py-3 ${
+                className={`flex items-start gap-3 rounded-xl border bg-white dark:bg-gray-900 px-4 py-3 ${
                   e.state.action === "done"
-                    ? "border-gray-100 opacity-60"
-                    : "border-amber-200"
+                    ? "border-gray-100 opacity-60 dark:border-gray-800"
+                    : "border-amber-200 dark:border-amber-500/40"
                 }`}
               >
                 <button
@@ -298,7 +323,7 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
                   className={`mt-0.5 h-5 w-5 shrink-0 rounded-md border flex items-center justify-center text-[11px] font-black transition-all ${
                     e.state.action === "done"
                       ? "bg-emerald-500 border-emerald-500 text-white"
-                      : "border-gray-300 text-transparent hover:border-emerald-400"
+                      : "border-gray-300 text-transparent hover:border-emerald-400 dark:border-gray-600"
                   }`}
                 >
                   ✓
@@ -307,13 +332,13 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     {e.info && <DomainBadge info={e.info} />}
                     {e.info && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {e.info.source}
                       </span>
                     )}
                     {e.state.updatedAt && (
                       <span
-                        className="text-[11px] text-gray-400"
+                        className="text-[11px] text-gray-400 dark:text-gray-500"
                         title={fullTimestamp(e.state.updatedAt)}
                       >
                         {timeAgo(e.state.updatedAt)}
@@ -328,7 +353,7 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
                     <ArticleLink info={e.info} />
                   </div>
                   {e.state.comment.trim() !== "" && (
-                    <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
                       {e.state.comment}
                     </p>
                   )}
@@ -342,17 +367,19 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
       {/* 予想の答え合わせ（v5: Think for yourself） */}
       <section>
         <div className="mb-4 flex items-baseline gap-3 flex-wrap">
-          <h3 className="text-xs font-black tracking-[0.2em] uppercase text-indigo-600">
+          <h3 className="text-xs font-black tracking-[0.2em] uppercase text-indigo-600 dark:text-indigo-400">
             🤔 予想の答え合わせ
           </h3>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-400 dark:text-gray-500">
             {stanceEntries.length} 件
           </span>
           {hitRate !== null && (
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-400 dark:text-gray-500">
               的中率{" "}
-              <span className="font-bold text-indigo-600">{hitRate}%</span>
-              <span className="text-gray-300">
+              <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                {hitRate}%
+              </span>
+              <span className="text-gray-300 dark:text-gray-600">
                 {" "}
                 （{stanceHitCount}/{stanceCheckedCount}）
               </span>
@@ -360,9 +387,11 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
           )}
         </div>
         {stanceEntries.length === 0 ? (
-          <p className="text-sm text-gray-400 rounded-xl border border-dashed border-gray-200 px-5 py-6 text-center">
+          <p className="text-sm text-gray-400 dark:text-gray-500 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 px-5 py-6 text-center">
             まだ予想がありません。「今日のブリーフ」で記事を
-            <span className="font-bold text-gray-500">読む前に</span>
+            <span className="font-bold text-gray-500 dark:text-gray-300">
+              読む前に
+            </span>
             、タイトルから結論を予想して書いてみよう。読んだあとに答え合わせできます。
           </p>
         ) : (
@@ -370,19 +399,19 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
             {stanceEntries.map((e) => (
               <article
                 key={e.id}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-3"
+                className="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900"
               >
                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                   {e.info && <DomainBadge info={e.info} />}
                   {e.info && (
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       {e.info.source}
                     </span>
                   )}
                   <ResultBadge result={e.state.stanceResult} />
                   {e.state.updatedAt && (
                     <span
-                      className="text-[11px] text-gray-400 ml-auto"
+                      className="text-[11px] text-gray-400 dark:text-gray-500 ml-auto"
                       title={fullTimestamp(e.state.updatedAt)}
                     >
                       {timeAgo(e.state.updatedAt)}
@@ -390,8 +419,8 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
                   )}
                 </div>
                 <ArticleLink info={e.info} />
-                <p className="mt-1.5 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap border-l-2 border-indigo-200 pl-3">
-                  <span className="mr-1 text-[10px] font-bold text-indigo-400">
+                <p className="mt-1.5 text-sm text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-wrap border-l-2 border-indigo-200 dark:border-indigo-500/40 pl-3">
+                  <span className="mr-1 text-[10px] font-bold text-indigo-400 dark:text-indigo-300">
                     予想
                   </span>
                   {e.state.stance}
@@ -405,13 +434,15 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
       {/* メモ一覧 */}
       <section>
         <div className="mb-4 flex items-baseline gap-3">
-          <h3 className="text-xs font-black tracking-[0.2em] uppercase text-gray-700">
+          <h3 className="text-xs font-black tracking-[0.2em] uppercase text-gray-700 dark:text-gray-200">
             📝 書いたメモ
           </h3>
-          <span className="text-xs text-gray-400">{memos.length} 件</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">
+            {memos.length} 件
+          </span>
         </div>
         {memos.length === 0 ? (
-          <p className="text-sm text-gray-400 rounded-xl border border-dashed border-gray-200 px-5 py-6 text-center">
+          <p className="text-sm text-gray-400 dark:text-gray-500 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 px-5 py-6 text-center">
             この期間に書いたメモはありません。自分の言葉で一言残すのが「思考放棄しない」第一歩。
           </p>
         ) : (
@@ -419,12 +450,12 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
             {memos.map((e) => (
               <article
                 key={e.id}
-                className="rounded-xl border border-gray-200 bg-white px-5 py-4"
+                className="rounded-xl border border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-gray-900"
               >
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   {e.info && <DomainBadge info={e.info} />}
                   {e.info && (
-                    <span className="text-xs font-medium text-gray-900">
+                    <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                       {e.info.source}
                     </span>
                   )}
@@ -435,7 +466,7 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
                   </span>
                   {e.state.updatedAt && (
                     <span
-                      className="text-[11px] text-gray-400 ml-auto"
+                      className="text-[11px] text-gray-400 dark:text-gray-500 ml-auto"
                       title={fullTimestamp(e.state.updatedAt)}
                     >
                       {timeAgo(e.state.updatedAt)}
@@ -445,7 +476,7 @@ export default function ReviewView({ articles }: { articles: Article[] }) {
                 <div className="mb-2">
                   <ArticleLink info={e.info} />
                 </div>
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap border-l-2 border-gray-200 pl-3">
+                <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-wrap border-l-2 border-gray-200 dark:border-gray-700 pl-3">
                   {e.state.comment}
                 </p>
               </article>

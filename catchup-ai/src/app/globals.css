@@ -1,15 +1,32 @@
 @import "tailwindcss";
 
+/* Tailwind v4: class ベースのダークモードを有効化（.dark を祖先に持つとき dark: が効く） */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
-  --color-background: #ffffff;
-  --color-foreground: #111827;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+:root {
+  --bg: #f9fafb;
+  --fg: #111827;
+}
+
+.dark {
+  --bg: #0a0e14;
+  --fg: #e5e7eb;
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: #f9fafb;
-  color: #111827;
+  background: var(--bg);
+  color: var(--fg);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 @keyframes shimmer {
@@ -23,6 +40,11 @@ body {
   animation: shimmer 1.5s infinite;
 }
 
+.dark .shimmer {
+  background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
+  background-size: 200% 100%;
+}
+
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -30,6 +52,15 @@ body {
 
 .animate-fade-in {
   animation: fade-in 0.4s ease-out both;
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.18s ease-out both;
 }
 
 .line-clamp-2 {
@@ -44,4 +75,26 @@ body {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* キーボード選択中のカードが sticky ヘッダーに隠れないように */
+.card-anchor {
+  scroll-margin-top: 6rem;
+}
+
+/* モーション控えめ設定を尊重（酔い・アクセシビリティ配慮） */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .shimmer,
+  .animate-fade-in,
+  .animate-scale-in {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }

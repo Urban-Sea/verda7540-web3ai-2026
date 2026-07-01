@@ -58,6 +58,8 @@ export function ArticleStatesProvider({ children }: { children: ReactNode }) {
         // corrupted entry — ignore and fall back to default
       }
     }
+    // マウント時に localStorage（外部ストア）から一度だけ読み込む正当なパターン
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStates(next);
     setLoaded(true);
   }, []);

@@ -9,19 +9,19 @@ const RESULTS: { key: Result; label: string; on: string; off: string }[] = [
     key: "hit",
     label: "✅ 当たり",
     on: "bg-emerald-500 text-white border-emerald-500",
-    off: "border-gray-200 text-gray-500 hover:border-emerald-300 hover:text-emerald-600",
+    off: "border-gray-200 text-gray-500 hover:border-emerald-300 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-400 dark:hover:border-emerald-500/50 dark:hover:text-emerald-300",
   },
   {
     key: "partial",
     label: "〰️ 部分的",
     on: "bg-amber-500 text-white border-amber-500",
-    off: "border-gray-200 text-gray-500 hover:border-amber-300 hover:text-amber-600",
+    off: "border-gray-200 text-gray-500 hover:border-amber-300 hover:text-amber-600 dark:border-gray-700 dark:text-gray-400 dark:hover:border-amber-500/50 dark:hover:text-amber-300",
   },
   {
     key: "miss",
     label: "❌ 外れ",
     on: "bg-rose-500 text-white border-rose-500",
-    off: "border-gray-200 text-gray-500 hover:border-rose-300 hover:text-rose-600",
+    off: "border-gray-200 text-gray-500 hover:border-rose-300 hover:text-rose-600 dark:border-gray-700 dark:text-gray-400 dark:hover:border-rose-500/50 dark:hover:text-rose-300",
   },
 ];
 
@@ -46,9 +46,9 @@ export default function StanceBlock({
 
   return (
     <div>
-      <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-indigo-500">
+      <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-indigo-500 dark:text-indigo-400">
         🤔 読む前の予想・スタンス
-        <span className="font-normal text-gray-400">
+        <span className="font-normal text-gray-400 dark:text-gray-500">
           タイトルだけ見て結論を当ててみる
         </span>
       </label>
@@ -56,12 +56,12 @@ export default function StanceBlock({
         value={stance}
         onChange={(e) => onStanceChange(e.target.value)}
         placeholder="例: たぶん〇〇の発表で、△△に効いてくるはず…"
-        className="w-full text-sm p-3 bg-indigo-50/40 border border-indigo-100 rounded-lg text-gray-700 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300"
+        className="w-full text-sm p-3 bg-indigo-50/40 border border-indigo-100 rounded-lg text-gray-700 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:text-gray-200 dark:placeholder:text-gray-500 dark:focus:border-indigo-500/50"
         rows={rows}
       />
       {hasStance && (
         <div className="mt-2 flex items-center gap-2 flex-wrap">
-          <span className="text-[11px] text-gray-400">読んだ結果 →</span>
+          <span className="text-[11px] text-gray-400 dark:text-gray-500">読んだ結果 →</span>
           {RESULTS.map((r) => {
             const active = result === r.key;
             return (
